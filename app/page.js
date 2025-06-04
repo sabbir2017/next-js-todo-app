@@ -39,6 +39,8 @@ export default function Home() {
   const [title, setTitle] = useState("");
   const [msg, setMsg] = useState("");
   const [selected, setSelected] = useState({});
+  const [searchDataList, setSearchDataList] = useState(todos);
+  const [isAssending, setIsAssending] = useState(true);
 
   const handleCheck = (selectedItem) => {
     const newItem = data.map((item) => {
@@ -47,6 +49,7 @@ export default function Home() {
         : item;
     });
     setData(newItem);
+    setSearchDataList(newItem);
   };
 
   const handleAddTodo = () => {
@@ -54,11 +57,12 @@ export default function Home() {
       setMsg("Please add todo");
     } else {
       const newTodo = {
-        id: data.length + 1,
+        id: Date.now(),
         title: title,
         isComplete: false,
       };
       setData([...data, newTodo]);
+      setSearchDataList([...data, newTodo]);
       toast("Todo added successfully");
       setTitle("");
       setMsg("");
@@ -80,22 +84,52 @@ export default function Home() {
       return item.id === selected.id ? { ...item, title: title } : item;
     });
     setData(newItem);
+    setSearchDataList(newItem);
     toast("Todo updated successfully");
     setTitle("");
     setSelected({});
   };
 
   const handleDelete = (deleteItem) => {
-    const newDeleteItem = data.filter(item=>{
-      return item.id != deleteItem.id
-    })
+    const newDeleteItem = data.filter((item) => {
+      return item.id != deleteItem.id;
+    });
     setData(newDeleteItem);
+    setSearchDataList(newDeleteItem);
   };
+
+  const handleSearch = (e) => {
+    const newData = data.filter((item) => {
+      return (
+        item.title.toLowerCase().search(e.target.value.toLowerCase()) !== -1
+      );
+    });
+    setSearchDataList(newData);
+  };
+
+  const handleShortByTitle =() => {
+    const sortedItems = [...data.sort((a,b)=>
+      isAssending ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title)
+      
+    )] 
+
+    setSearchDataList(sortedItems);
+    setIsAssending(!isAssending);
+  }
+ 
+  const handleShortById =() => {
+    const sortedItems = [...data.sort((a,b)=>
+      isAssending ? a.id - b.id : b.id - a.id
+    )] 
+
+    setSearchDataList(sortedItems);
+    setIsAssending(!isAssending);
+  }
 
   return (
     <div className="page">
       <div className="max-w-4xl mx-auto p-10 bg-white mt-10 rounded-2xl">
-        <h1 className="text-center text-4xl font-bold mb-8">Todo List</h1>
+        <h1 className="text-center text-4xl font-bold mb-8">Todo App</h1>
         <div className="mb-5">
           <div className="flex mb-1">
             <ToastContainer />
@@ -124,8 +158,29 @@ export default function Home() {
           </div>
           {msg && <p className=" text-red-600">{msg}</p>}
         </div>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <h1 className="text-center text-2xl font-bold">Todo List</h1>
+            <button type="button" className=" border px-3 py-1 rounded-md cursor-pointer" onClick={handleShortByTitle}>
+              sort by title
+            </button>
+            <button type="button" className=" border px-3 py-1 rounded-md cursor-pointer" onClick={handleShortById}>
+              sort by id
+            </button>
+          </div>
+          <div className="mb-5">
+            <div className="flex mb-1">
+              <input
+                type="text"
+                placeholder="Search todo"
+                onChange={handleSearch}
+                className=" flex-auto border p-2 rounded-md"
+              />
+            </div>
+          </div>
+        </div>
         <ul className="list-none">
-          {data.map((item) => (
+          {searchDataList.map((item) => (
             <li
               className="bg-purple-200 mb-2 rounded-sm p-2 flex gap-2 justify-between items-center"
               key={item.id}
